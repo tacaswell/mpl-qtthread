@@ -1,0 +1,11 @@
+[run]
+source =
+    mpl_qtthread
+[report]
+omit =
+    */python?.?/*
+    .*version.*
+    *_version.py
+
+exclude_lines =
+    if __name__ == '__main__':

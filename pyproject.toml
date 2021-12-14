@@ -1,0 +1,10 @@
+# pyproject.toml
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
+
+# pyproject.toml
+[tool.setuptools_scm]
+version_scheme = "release-branch-semver"
+local_scheme = "node-and-date"
+write_to = "mpl_qtthread/_version.py"
+fallback_version = "0.0+UNKNOWN"
