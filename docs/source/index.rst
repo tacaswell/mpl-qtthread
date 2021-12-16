@@ -55,3 +55,46 @@ failures due to a temporarily inconsistent Figure state (e.g. updating the x
 and y values of a `~matplotlib.lines.Line2D` object to be different
 lengths). It is possible that this package will need to develop a way to add
 some locking to Matplotilb.
+
+
+Examples
+--------
+
+Python Threads
+**************
+
+.. code-block:: python
+
+
+   import threading
+   import time
+   import mpl_qtthread.backend
+   import matplotlib
+   import matplotlib.backends.backend_qt
+
+   # set up the teleporter
+   mpl_qtthread.backend.initialize_qt_teleporter()
+   # tell Matplotlib to use this backend
+   matplotlib.use("module://mpl_qtthread.backend_agg")
+
+   # import pyplot and make it interactive
+   import matplotlib.pyplot as plt
+   plt.ion()
+
+
+   def background():
+       # make a figure and plot some data
+       fig, ax = plt.subplots()
+       (ln,) = ax.plot(range(5))
+       # periodically update the figure
+       for j in range(5):
+           print(f"starting to block {j}")
+           ln.set_color(f"C{j}")
+           ax.set_title(f'cycle {j}')
+           fig.canvas.draw_idle()
+           time.sleep(5)
+
+   # start the thread
+   threading.Thread(target=background).start()
+   # start the QApplication main loop
+   matplotlib.backends.backend_qt.qApp.exec()
