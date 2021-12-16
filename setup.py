@@ -57,7 +57,7 @@ setup(
     setup_requires=[
         "setuptools_scm>=6.2",
         "setuptools_scm_git_archive",
-        "setuptools>=45"
+        "setuptools>=45",
     ],
     use_scm_version={
         "version_scheme": "release-branch-semver",
