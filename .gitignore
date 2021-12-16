@@ -82,3 +82,5 @@ target/
 .ipynb_checkpoints
 
 mpl_qtthread/_version.py
+
+_as_gen

@@ -27,6 +27,13 @@
 # If your documentation needs a minimal Sphinx version, state it here.
 #
 # needs_sphinx = '1.0'
+import sys
+
+sys.path.append(".")
+
+
+# Release mode enables optimizations and other related options.
+is_release_build = tags.has("release")  # noqa
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -38,6 +45,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
+    "custom_roles",
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "matplotlib.sphinxext.plot_directive",
@@ -101,15 +109,33 @@ pygments_style = "sphinx"
 todo_include_todos = False
 
 
+# The name of the Pygments (syntax highlighting) style to use.
+pygments_style = "sphinx"
+
+default_role = "obj"
+
+nitpicky = True
+
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_rtd_theme"
-import sphinx_rtd_theme
+html_theme = "mpl_sphinx_theme"
 
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme_options = {
+    "native_site": True,
+    "logo_link": "index",
+    # collapse_navigation in pydata-sphinx-theme is slow, so skipped for local
+    # and CI builds https://github.com/pydata/pydata-sphinx-theme/pull/386
+    "collapse_navigation": not is_release_build,
+    "show_prev_next": False,
+}
+include_analytics = is_release_build
+if include_analytics:
+    html_theme_options["google_analytics_id"] = "UA-55954603-1"
+
+native_site = True
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -145,15 +171,16 @@ htmlhelp_basename = "mpl-qtthread"
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
+    #
     # 'papersize': 'letterpaper',
-    #
     # The font size ('10pt', '11pt' or '12pt').
+    #
     # 'pointsize': '10pt',
-    #
     # Additional stuff for the LaTeX preamble.
-    # 'preamble': '',
     #
+    # 'preamble': '',
     # Latex figure (float) alignment
+    #
     # 'figure_align': 'htbp',
 }
 
@@ -161,13 +188,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (
-        master_doc,
-        "mpl-qtthread.tex",
-        "mpl-qtthread Documentation",
-        "Contributors",
-        "manual",
-    ),
+    (master_doc, "mpl-qtthread.tex", "mpl-qtthread Documentation", "Contributors", "manual"),
 ]
 
 
@@ -175,15 +196,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (
-        master_doc,
-        "mpl-qtthread",
-        "mpl-qtthread Documentation",
-        [author],
-        1,
-    )
-]
+man_pages = [(master_doc, "mpl-qtthread", "mpl-qtthread Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output -------------------------------------------
@@ -198,7 +211,7 @@ texinfo_documents = [
         "mpl-qtthread Documentation",
         author,
         "mpl-qtthread",
-        "A Matplotlib backend for working with (Q)Threads and Qt",
+        "Prototype project for splitting pyplot in half",
         "Miscellaneous",
     ),
 ]
@@ -207,8 +220,5 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
-    "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "matplotlib": ("https://matplotlib.org/stable", None),
 }

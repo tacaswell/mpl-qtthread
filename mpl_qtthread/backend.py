@@ -15,9 +15,14 @@ _teleporter = None
 
 def initialize_qt_teleporter():
     """
-    Set up the bluesky Qt 'teleporter'.
+    Set up the Qt 'teleporter' to move widget creation to the main thread.
 
-    This makes it safe to instantiate QtAwareCallback from a background thread.
+    This makes it safe to create Matplotlib figures from threads other than the
+    main one.
+
+    .. warning ::
+
+        This must be run on the main thread.
 
     Raises
     ------

@@ -1,6 +1,8 @@
 from pathlib import Path
 from . import _version
 
+from .backend import initialize_qt_teleporter
+
 
 def _get_version():
     """Return the version string used for __version__."""
@@ -8,7 +10,6 @@ def _get_version():
     # shallow clone, such as those used by CI, as the latter would trigger
     # a warning from setuptools_scm.
     # Adapted from Matplotlib
-
     root = Path(__file__).resolve().parents[2]
     if (root / ".git").exists() and not (root / ".git/shallow").exists():
         try:
