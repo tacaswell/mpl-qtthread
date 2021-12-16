@@ -1,7 +1,7 @@
 from pathlib import Path
 from . import _version
 
-from .backend import initialize_qt_teleporter
+from .backend import initialize_qt_teleporter  # noqa
 
 
 def _get_version():

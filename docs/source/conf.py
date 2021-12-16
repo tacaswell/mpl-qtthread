@@ -188,7 +188,13 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "mpl-qtthread.tex", "mpl-qtthread Documentation", "Contributors", "manual"),
+    (
+        master_doc,
+        "mpl-qtthread.tex",
+        "mpl-qtthread Documentation",
+        "Contributors",
+        "manual",
+    ),
 ]
 
 
