@@ -6,7 +6,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.qt_compat import QtCore
 try:
     from matplotlib.backends.backend_qt import _BackendQT, _create_qApp
-except ImportError
+except ImportError:
     from matplotlib.backends.backend_qt5 import _BackendQT, _create_qApp
 
 # The purpose of initialize_qt_teleporter, _get_teleporter is to ensure that Qt
