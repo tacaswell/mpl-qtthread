@@ -1,0 +1,6 @@
+﻿mpl\_qtthread.initialize\_qt\_teleporter
+========================================
+
+.. currentmodule:: mpl_qtthread
+
+.. autofunction:: initialize_qt_teleporter
