@@ -4,6 +4,22 @@ from . import _version
 from .backend import initialize_qt_teleporter  # noqa
 
 
+def monkeypatch_pyplot():
+    """
+    Monkey patch pyplot to suppress warnings.
+
+    Matplotlib will warn if you try to do GUI work on a background thread
+    because it does not typically work well (which is the motivation for why this
+    project exists).
+    """
+    import matplotlib.pyplot as plt
+
+    def monkeypatched_warner():
+        ...
+
+    plt._warn_if_gui_out_of_main_thread = monkeypatched_warner
+
+
 def _get_version():
     """Return the version string used for __version__."""
     # Only shell out to a git subprocess if really needed, and not on a

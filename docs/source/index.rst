@@ -65,12 +65,12 @@ Python Threads
 
 .. code-block:: python
 
-
    import threading
    import time
    import mpl_qtthread.backend
    import matplotlib
    import matplotlib.backends.backend_qt
+   import matplotlib.pyplot as plt
 
    # set up the teleporter
    mpl_qtthread.backend.initialize_qt_teleporter()
@@ -78,8 +78,10 @@ Python Threads
    matplotlib.use("module://mpl_qtthread.backend_agg")
 
    # import pyplot and make it interactive
-   import matplotlib.pyplot as plt
    plt.ion()
+
+   # suppress (now) spurious warnings for mpl3.3+
+   mpl_qtthread.monkeypatch_pyplot()
 
 
    def background():
@@ -90,9 +92,11 @@ Python Threads
        for j in range(5):
            print(f"starting to block {j}")
            ln.set_color(f"C{j}")
-           ax.set_title(f'cycle {j}')
+           ax.set_title(f"cycle {j}")
            fig.canvas.draw_idle()
            time.sleep(5)
+       plt.close(fig)
+
 
    # start the thread
    threading.Thread(target=background).start()
