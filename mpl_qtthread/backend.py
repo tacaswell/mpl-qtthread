@@ -17,6 +17,59 @@ except ImportError:
 _teleporter = None
 
 
+class FigureCanvasQT(_BackendQT.FigureCanvas):
+    def flush_events(self):
+        # only try to flush events if we are on main thread
+        if threading.current_thread() is threading.main_thread():
+            super().flush_events()
+
+    def start_event_loop(self, timeout=0):
+        # only try to flush events if we are on main thread
+        if threading.current_thread() is threading.main_thread():
+            super().start_event_loop(timeout=timeout)
+
+
+class FigureManagerQT(_BackendQT.FigureManager):
+    def _orig_destroy(self):
+        super().destroy()
+
+    def destroy(self):
+        if _teleporter is None:
+            raise RuntimeError("teleporter not inited")
+        evt = threading.Event()
+
+        _teleporter.destroy_manager.emit(self, evt)
+
+        if not evt.wait(5):
+            raise RuntimeError("failed to destroy manager.")
+
+    def _orig_resize(self, width, height):
+        super().resize(width, height)
+
+    def resize(self, width, height):
+        if _teleporter is None:
+            raise RuntimeError("teleporter not inited")
+        evt = threading.Event()
+
+        _teleporter.resize_manager.emit(self, width, height, evt)
+
+        if not evt.wait(5):
+            raise RuntimeError("failed to destroy manager.")
+
+    def _orig_show(self):
+        super().show()
+
+    def show(self):
+        if _teleporter is None:
+            raise RuntimeError("teleporter not inited")
+        evt = threading.Event()
+
+        _teleporter.show_manager.emit(self, evt)
+
+        if not evt.wait(5):
+            raise RuntimeError("failed to destroy manager.")
+
+
 def initialize_qt_teleporter():
     """
     Set up the Qt 'teleporter' to move widget creation to the main thread.
@@ -54,26 +107,45 @@ def _build_teleporter():
     if threading.current_thread() is not threading.main_thread():
         raise RuntimeError("Must initialize teleporter on main thread!")
 
+    class Teleporter(QtCore.QObject):
+        create_widget = QtCore.Signal(Figure, type, threading.Event)
+        # TODO make the second argument int or str
+        create_manager = QtCore.Signal(Figure, int, type, threading.Event)
+        destroy_manager = QtCore.Signal(FigureManagerQT, threading.Event)
+        resize_manager = QtCore.Signal(FigureManagerQT, float, float, threading.Event)
+        show_manager = QtCore.Signal(FigureManagerQT, threading.Event)
+
+    t = Teleporter()
+
+    @t.create_widget.connect
     def create_widget(figure, canvas_class, evt):
         # do not worry, circular references mean the canvas gets put
         # on the figure here!
         canvas_class(figure)
         evt.set()
 
+    @t.create_manager.connect
     def create_manager(figure, num, manager_class, evt):
         # Again, we are relying on circular references to stash the newly
         # created object
         manager_class(figure.canvas, num)
         evt.set()
 
-    class Teleporter(QtCore.QObject):
-        create_widget = QtCore.Signal(Figure, type, threading.Event)
-        # TODO make the second argument int or str
-        create_manager = QtCore.Signal(Figure, int, type, threading.Event)
+    @t.destroy_manager.connect
+    def destroy_manager(manager, evt):
+        manager._orig_destroy()
+        evt.set()
 
-    t = Teleporter()
-    t.create_widget.connect(create_widget)
-    t.create_manager.connect(create_manager)
+    @t.resize_manager.connect
+    def resize_manager(manager, width, height, evt):
+        manager._orig_resize(width, height)
+        evt.set()
+
+    @t.show_manager.connect
+    def show_manager(manager, evt):
+        manager._orig_show()
+        evt.set()
+
     return t
 
 
@@ -94,3 +166,6 @@ class _BackendThreads(_BackendQT):
             raise RuntimeError("failed to create manager")
 
         return canvas.manager
+
+    FigureManager = FigureManagerQT
+    FigureCanvas = FigureCanvasQT
