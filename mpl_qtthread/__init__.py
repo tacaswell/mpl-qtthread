@@ -2,7 +2,6 @@ from pathlib import Path
 from . import _version
 
 
-
 def monkeypatch_pyplot():
     """
     Monkey patch pyplot to suppress warnings.

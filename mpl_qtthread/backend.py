@@ -17,6 +17,8 @@ except ImportError:
 # Addapted from
 # https://github.com/napari/superqt/blob/ba1ae92bccc282da040281751b71afcbe4c0e302/src/superqt/utils/_ensure_thread.py
 class CallCallable(QtCore.QObject):
+    """Utility class to wrap callable for moving callables to the right thread."""
+
     finished = QtCore.Signal(object)
     instances: List["CallCallable"] = []
 
