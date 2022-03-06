@@ -6,4 +6,4 @@ API
    :toctree: _as_gen
    :nosignatures:
 
-   mpl_qtthread.initialize_qt_teleporter
+   mpl_qtthread.monkeypatch_pyplot

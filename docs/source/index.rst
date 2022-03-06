@@ -20,33 +20,26 @@ Theory of operation
 When working with Qt and threads you have to be sure to create QObjects on the
 thread you are going to use them on and you can only draw to the screen from
 the main thread.  Combined, this means that all of the UI creation and work
-needs to be done on the main thread.  However, background threads are able to
-influence the UI via Qt's Signal/Slot mechanism which can be safely used for
-inter-thread communication.
+needs to be done on the main thread.
 
-However, when you use the function is `matplotlib.pyplot` to make new
-Matplotlib figures it will create a ``QtWidget`` subclass instance for the
-canvas and a ``MainWindow`` instance to put the canvas and toolbar in.  Thus,
-if you try to use pyplot from any Python thread but the main thread you can run
-into significant issue from Qt (never mind that the rest of Matplotlib is not
-very thread safe) ranging from windows that never render to crashes.
+When you use the function is `matplotlib.pyplot` to make new Matplotlib figures
+it will create a ``QtWidget`` subclass instance for the canvas and a
+``MainWindow`` instance to put the canvas and toolbar in.  Thus, if you try to
+use pyplot from any Python thread but the main thread you can run into
+significant issue from Qt (never mind that the rest of Matplotlib is not very
+thread safe) ranging from windows that never render to crashes.
 
-This works by creating a ``QtCore.QObject`` on the main thread (manually done
-via `mpl_qtthread.initialize_qt_teleporter`).  This object has two signals, one
-for creating the `~matplotlib.backend_bases.FigureCanvasBase` instance and one for
-creating the `~matplotlib.backend_bases.FigureManagerBase` that we need.  As part of
-creating this (private) object Slots (aka callbacks) are connected to the
-Signals that will do the actual work of creating the instances.
+This project copies (and lightly adapts) the work from `superqt
+<https://github.com/napari/superqt>`_ to move the work of any methods that need
+to be run on the main thread there.  This works by:
 
-These Signals are used by the Matplotlib Backend that the package implements.
-The main thing than is over-ridden from the upstream behavior is that rather
-than directly instantiating the ``FigureCanvas`` and ``FigureManager``
-instances, it emits enough information to create them to the Signals.  Because
-the callbacks for a Signal are processed on the thread the QObject is
-affiliated with (and they are by default affiliated with the thread they are
-created on) the callbacks to create the QWidgets will run on the main thread.
-Thus, we are able to create and update Matplotlib figures from a background
-thread while the QApplication runs in the main thread.
+1. Creating a now ``QObject`` on the background thread wrapping the method /
+   function of interest.
+2. Moving that new object to the main thread.
+3. Creating a `concurrent.futures.Future` to return the result and connecting
+   to a ``Signal``.
+4. Invoking the original method / function via a (thread safe) ``Slot``.
+5. Waiting (or not) for the ``Future`` to be completed and return.
 
 Matplotlib still is not actually thread safe so it is important to only update
 the Figure from one thread.  If you are extensively panning or zooming while

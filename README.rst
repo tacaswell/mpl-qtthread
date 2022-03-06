@@ -15,16 +15,20 @@ A minimal example:
 .. code-block:: python
 
 
+
    import threading
    import time
-   import mpl_qtthread.backend
    import matplotlib
    import matplotlib.backends.backend_qt
+   import matplotlib.pyplot as plt
 
-   mpl_qtthread.backend.initialize_qt_teleporter()
+   import mpl_qtthread
+
    matplotlib.use("module://mpl_qtthread.backend_agg")
 
-   import matplotlib.pyplot as plt
+   matplotlib.backends.backend_qt._create_qApp()
+
+   mpl_qtthread.monkeypatch_pyplot()
 
    plt.ion()
 
@@ -39,7 +43,7 @@ A minimal example:
            ax.set_title(f'cycle {j}')
            fig.canvas.draw_idle()
            time.sleep(5)
-
+       print("Done! please close the window")
 
    threading.Thread(target=background).start()
    matplotlib.backends.backend_qt.qApp.exec()

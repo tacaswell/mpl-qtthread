@@ -29,7 +29,7 @@
 # needs_sphinx = '1.0'
 import sys
 
-sys.path.append(".")
+sys.path.append("./source")
 
 
 # Release mode enables optimizations and other related options.
