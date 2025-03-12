@@ -94,8 +94,8 @@ def background():
     time.sleep(1)
     plt.close("all")
     print(
-        f"all figures should be closed"
-        f"app will exit in {12 - (time.monotonic() - thread_start_time)}s on hit quit."
+        f"all figures should be closed\n"
+        f"app will exit in {12 - (time.monotonic() - thread_start_time):.02f}s or hit quit."
     )
 
 
