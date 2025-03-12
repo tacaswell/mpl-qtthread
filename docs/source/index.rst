@@ -66,8 +66,6 @@ Python Threads
    import matplotlib.backends.backend_qt
    import matplotlib.pyplot as plt
 
-   # set up the teleporter
-   mpl_qtthread.backend.initialize_qt_teleporter()
    # tell Matplotlib to use this backend
    matplotlib.use("module://mpl_qtthread.backend_agg")
 
