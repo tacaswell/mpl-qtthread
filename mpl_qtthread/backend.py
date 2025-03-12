@@ -5,13 +5,11 @@ from typing import Callable, List, Optional
 import threading
 import functools
 
-
 from matplotlib.backends.qt_compat import QtCore
-
-try:
-    from matplotlib.backends.backend_qt import _BackendQT
-except ImportError:
-    from matplotlib.backends.backend_qt5 import _BackendQT5 as _BackendQT
+from matplotlib.backends.backend_qt import (
+    FigureManagerQT as _FigureManager,
+    FigureCanvasQT as _FigureCanvas,
+)
 
 
 # Addapted from
@@ -90,23 +88,13 @@ def _run_in_thread(
     f = CallCallable(func, *args, **kwargs)
     f.moveToThread(thread)
     f.finished.connect(future.set_result, QtCore.Qt.ConnectionType.DirectConnection)
-    QtCore.QMetaObject.invokeMethod(f, "call", QtCore.Qt.ConnectionType.QueuedConnection)  # type: ignore
+    QtCore.QMetaObject.invokeMethod(
+        f, "call", QtCore.Qt.ConnectionType.QueuedConnection
+    )  # type: ignore
     return future.result(timeout=timeout) if await_return else future
 
 
-class FigureCanvasQT(_BackendQT.FigureCanvas):
-    def flush_events(self):
-        # only try to flush events if we are on main thread
-        if threading.current_thread() is threading.main_thread():
-            return super().flush_events()
-
-    def start_event_loop(self, timeout=0):
-        # only try to flush events if we are on main thread
-        if threading.current_thread() is threading.main_thread():
-            return super().start_event_loop(timeout=timeout)
-
-
-class FigureManagerQT(_BackendQT.FigureManager):
+class FigureManagerQT(_FigureManager):
     @ensure_main_thread
     def destroy(self):
         return super().destroy()
@@ -119,12 +107,32 @@ class FigureManagerQT(_BackendQT.FigureManager):
     def show(self):
         return super().show()
 
-
-class _BackendThreads(_BackendQT):
     @classmethod
     @ensure_main_thread
-    def new_figure_manager_given_figure(cls, num, figure):
-        return super().new_figure_manager_given_figure(num, figure)
+    def create_with_canvas(cls, canvas_class, figure, num):
+        """
+        Create a manager for a given *figure* using a specific *canvas_class*.
 
-    FigureManager = FigureManagerQT
-    FigureCanvas = FigureCanvasQT
+        Backends should override this method if they have specific needs for
+        setting up the canvas or the manager.
+        """
+        return cls(canvas_class(figure), num)
+
+
+class FigureCanvasQT(_FigureCanvas):
+    manager_class = FigureManagerQT
+
+    def flush_events(self):
+        # only try to flush events if we are on main thread
+        if threading.current_thread() is threading.main_thread():
+            return super().flush_events()
+
+    def start_event_loop(self, timeout=0):
+        # only try to flush events if we are on main thread
+        if threading.current_thread() is threading.main_thread():
+            return super().start_event_loop(timeout=timeout)
+
+    @classmethod
+    @ensure_main_thread
+    def new_manager(cls, figure, num):
+        return cls.manager_class.create_with_canvas(cls, figure, num)

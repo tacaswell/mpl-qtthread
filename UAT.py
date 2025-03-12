@@ -4,18 +4,40 @@ import mpl_qtthread.backend
 import matplotlib
 import matplotlib.backends.backend_qt
 import matplotlib.pyplot as plt
-from matplotlib.backends.qt_compat import QtWidgets, QtCore
+from matplotlib.backends.qt_compat import QtWidgets, QtCore, QT_API
 
+app = QtWidgets.QApplication.instance()
+print(app)
 
-# set up the teleporter
-mpl_qtthread.backend.initialize_qt_teleporter()
+if app is None:
+    if QT_API in {"PyQt6", "PySide6"}:
+        qt_version = 6
+    elif QT_API in {"PyQt5", "PySide2"}:
+        qt_version = 5
+    else:
+        raise RuntimeError("Should never be here")
+
+    if qt_version == 5:
+        try:
+            QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+        except AttributeError:  # Only for Qt>=5.6, <6.
+            pass
+    try:
+        QtWidgets.QApplication.setHighDpiScaleFactorRoundingPolicy(
+            QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+        )
+    except AttributeError:  # Only for Qt>=5.14.
+        pass
+    app = QtWidgets.QApplication(["mpl qtthread UAT"])
+
+    app.setQuitOnLastWindowClosed(True)
+
 # tell Matplotlib to use this backend
 matplotlib.use("module://mpl_qtthread.backend_agg")
 
 # suppress (now) spurious warnings for mpl3.3+
 mpl_qtthread.monkeypatch_pyplot()
 
-app = matplotlib.backends.backend_qt.qApp
 
 # button to exit early and to make sure qapp does not quit!
 bt = QtWidgets.QPushButton("Quit")
@@ -34,6 +56,7 @@ timer.start(tot_time * 1000)  # this is in ms
 def background():
     # make a figure and plot some data
     fig, ax = plt.subplots()
+
     plt.show(block=False)
     (ln,) = ax.plot(range(5))
     thread_start_time = start_time = time.monotonic()
@@ -62,7 +85,7 @@ def background():
         time.sleep(1)
         fig2.canvas.manager.full_screen_toggle()
         fig2.canvas.manager.set_window_title(f"toggled {j}")
-        print(f"toggled Δt {time.monotonic() - start_time:.3f} (expected ~{j+1})")
+        print(f"toggled Δt {time.monotonic() - start_time:.3f} (expected ~{j + 1})")
 
     fig3, _ = plt.subplots(3, 1)
     fig3.show()
